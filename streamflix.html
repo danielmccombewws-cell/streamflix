@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StreamFlix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0b0b;
+    --bg-elev:#141414;
+    --card:#232323;
+    --card-light:#2e2e2e;
+    --accent:#e50914;
+    --accent-dim:#7c0a0f;
+    --text:#ffffff;
+    --text-dim:#a6a6a6;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;}
+  body{min-height:100vh;}
+  h1,h2,h3,.display{font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;}
+  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;}
+  .hidden{display:none !important;}
+  .edit-only{display:none;}
+  body.edit-mode .edit-only{display:flex;}
+  body.edit-mode .browse-only{display:none;}
+
+  /* ---------- Nav ---------- */
+  #topnav{
+    position:sticky;top:0;z-index:40;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 5vw;flex-wrap:wrap;gap:8px;
+    background:linear-gradient(to bottom, rgba(0,0,0,.85), rgba(0,0,0,0));
+  }
+  #logoText{
+    font-family:'Bebas Neue',sans-serif;
+    color:var(--accent);
+    font-size:clamp(22px,4vw,32px);
+    font-style:italic;
+    letter-spacing:1px;
+    outline:none;
+    border-radius:4px;
+    padding:2px 6px;
+    cursor:pointer;
+  }
+  .nav-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .icon-btn{
+    background:rgba(255,255,255,.08);
+    color:var(--text);
+    width:44px;height:44px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;
+  }
+  .icon-btn:active{background:rgba(255,255,255,.2);}
+  .pill-btn{
+    background:rgba(255,255,255,.08);color:var(--text);
+    padding:10px 18px;border-radius:4px;font-weight:600;font-size:14px;
+    min-height:44px;display:flex;align-items:center;gap:6px;
+  }
+  .pill-btn.danger{background:rgba(229,9,20,.25);color:#ff8a8f;}
+  .pill-btn.primary{background:var(--accent);color:#fff;}
+  .pill-btn:active{filter:brightness(1.2);}
+
+  /* ---------- Hero ---------- */
+  #hero{
+    position:relative;
+    min-height:46vh;
+    display:flex;align-items:flex-end;
+    background-size:cover;background-position:center top;
+    background-color:#1a1a1a;
+    margin-top:-72px;
+    transition:opacity .5s ease;
+    cursor:pointer;
+  }
+  #hero::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(to top, var(--bg) 2%, rgba(11,11,11,.15) 55%, rgba(11,11,11,.55) 100%);
+  }
+  #heroContent{position:relative;z-index:2;padding:90px 5vw 32px;max-width:680px;}
+  #heroTitle{font-size:clamp(28px,5vw,52px);margin:0 0 10px;text-shadow:0 2px 10px rgba(0,0,0,.6);}
+  #heroDesc{font-size:15px;color:#e8e8e8;line-height:1.5;margin:0 0 16px;text-shadow:0 1px 6px rgba(0,0,0,.7);
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+  #heroPlayBtn{font-size:16px;padding:12px 26px;border-radius:4px;}
+
+  /* ---------- Rows ---------- */
+  #rowsContainer{padding:24px 0 100px;}
+  .row-block{margin-bottom:34px;}
+  .row-header{display:flex;align-items:center;gap:10px;padding:0 5vw;margin-bottom:10px;}
+  .row-title{font-size:clamp(16px,2.4vw,22px);text-transform:uppercase;color:#e6e6e6;flex:1;}
+  .row-edit-controls{display:flex;gap:6px;}
+  .mini-btn{
+    background:rgba(255,255,255,.1);color:#ddd;width:36px;height:36px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:14px;
+  }
+  .mini-btn:active{background:rgba(255,255,255,.25);}
+
+  .row-track-wrap{position:relative;}
+  .row-track{
+    display:flex;gap:10px;overflow-x:auto;scroll-behavior:smooth;
+    padding:4px 5vw 14px;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .row-track::-webkit-scrollbar{display:none;}
+  .row-arrow{
+    position:absolute;top:0;bottom:14px;width:44px;z-index:5;
+    background:linear-gradient(to right, rgba(11,11,11,.85), transparent);
+    color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;
+  }
+  .row-arrow.right{right:0;left:auto;background:linear-gradient(to left, rgba(11,11,11,.85), transparent);}
+  .row-arrow.left{left:0;}
+
+  .card{
+    position:relative;flex:0 0 auto;
+    width:min(42vw,230px);aspect-ratio:16/9;
+    border-radius:var(--radius);overflow:hidden;background:var(--card);
+    display:flex;align-items:flex-end;
+  }
+  .card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .card .placeholder{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:6px;color:var(--text-dim);background:linear-gradient(135deg,#1d1d1d,#2a2a2a);
+  }
+  .card .placeholder .ic{font-size:26px;}
+  .card .title-overlay{
+    position:relative;z-index:2;width:100%;padding:10px 8px;
+    background:linear-gradient(to top, rgba(0,0,0,.85), transparent);
+    font-size:13px;font-weight:600;line-height:1.2;
+  }
+  .card:active{transform:scale(.97);}
+  .card.add-tile{
+    align-items:center;justify-content:center;background:rgba(255,255,255,.05);
+    border:2px dashed rgba(255,255,255,.25);color:var(--text-dim);font-size:14px;flex-direction:column;gap:6px;
+  }
+  .card-edit-row{
+    position:absolute;top:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;padding:6px;
+  }
+  .card-edit-row button{
+    width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .card-move-row{
+    position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;padding:6px;
+  }
+  .card-move-row button{
+    width:30px;height:30px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;font-size:13px;
+  }
+
+  /* ---------- Add row button ---------- */
+  #addRowBtn{
+    position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+    z-index:30;border-radius:30px;padding:14px 24px;background:var(--accent);color:#fff;
+    font-weight:700;font-size:15px;box-shadow:0 6px 20px rgba(0,0,0,.5);display:flex;gap:8px;align-items:center;
+  }
+
+  /* ---------- Empty state ---------- */
+  #emptyState{
+    padding:18vh 8vw;text-align:center;color:var(--text-dim);
+  }
+  #emptyState h2{color:#fff;font-size:clamp(22px,4vw,30px);margin-bottom:10px;}
+  #emptyState p{font-size:15px;line-height:1.6;max-width:480px;margin:0 auto;}
+
+  /* ---------- Modals ---------- */
+  .modal{
+    position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.82);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-box{
+    background:var(--bg-elev);border-radius:10px;max-width:460px;width:100%;
+    max-height:92vh;overflow-y:auto;padding:24px;
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .modal-box.small{max-width:340px;text-align:center;}
+  .modal-box h2{font-size:22px;margin:0 0 18px;text-transform:uppercase;color:#fff;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;color:var(--text-dim);margin-bottom:6px;font-weight:600;}
+  .field input[type="text"],.field input[type="url"],.field textarea{
+    width:100%;background:#1f1f1f;border:1px solid #3a3a3a;border-radius:5px;
+    padding:12px;color:#fff;font-size:15px;font-family:'Inter',sans-serif;
+  }
+  .field textarea{resize:vertical;min-height:60px;}
+  .field input.invalid{border-color:var(--accent);}
+  .field .err{color:#ff7b7f;font-size:12px;margin-top:4px;display:none;}
+  .field .err.show{display:block;}
+  .file-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .file-btn{background:#2e2e2e;color:#fff;padding:10px 14px;border-radius:5px;font-size:14px;font-weight:600;min-height:44px;}
+  .thumb-preview{width:90px;height:50px;border-radius:4px;object-fit:cover;background:#000;}
+  .hint{font-size:12.5px;color:var(--text-dim);line-height:1.5;margin:4px 0 10px;}
+  .src-toggle{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+  .src-toggle button{
+    flex:1 1 30%;padding:10px 6px;border-radius:5px;background:#1f1f1f;color:var(--text-dim);font-size:12.5px;font-weight:700;
+    border:1px solid #3a3a3a;min-height:44px;
+  }
+  .src-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .swatch-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  .swatch{width:42px;height:42px;border-radius:50%;border:3px solid transparent;padding:0;position:relative;}
+  .swatch.selected{border-color:#fff;}
+  .swatch.selected::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+  .custom-color-row{display:flex;align-items:center;gap:10px;}
+  .custom-color-row label{margin:0;font-size:13px;color:var(--text-dim);font-weight:600;}
+  .custom-color-row input[type="color"]{width:54px;height:42px;border:1px solid #3a3a3a;border-radius:6px;background:none;padding:2px;}
+  .modal-box h3{font-size:14px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin:22px 0 12px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);}
+  .modal-box h3:first-of-type{margin-top:0;padding-top:0;border-top:none;}
+  .toggle-btn{
+    padding:10px 20px;border-radius:30px;background:#2a2a2a;color:var(--text-dim);font-weight:700;font-size:13px;min-height:44px;
+  }
+  .toggle-btn.on{background:#1f9d55;color:#fff;}
+
+  /* ---------- Profile screen ---------- */
+  #profileScreen{
+    position:fixed;inset:0;z-index:150;background:var(--bg);
+    display:flex;align-items:center;justify-content:center;padding:6vh 5vw;overflow-y:auto;
+  }
+  #profileScreenInner{max-width:780px;width:100%;text-align:center;}
+  #profileScreenInner h1{font-size:clamp(26px,5vw,44px);margin-bottom:30px;}
+  #profileGrid{display:flex;flex-wrap:wrap;gap:22px;justify-content:center;}
+  .profile-tile{display:flex;flex-direction:column;align-items:center;gap:10px;width:120px;position:relative;}
+  .profile-avatar{
+    width:96px;height:96px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    font-size:34px;font-weight:700;color:#fff;background-size:cover;background-position:center;
+    border:3px solid transparent;
+  }
+  .profile-tile:active .profile-avatar{border-color:#fff;}
+  .profile-name{font-size:14px;color:var(--text-dim);font-weight:600;}
+  .profile-edit-btn{
+    position:absolute;top:-6px;right:6px;width:30px;height:30px;border-radius:50%;
+    background:rgba(0,0,0,.7);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;
+  }
+  .profile-tile.add-profile .profile-avatar{background:#1f1f1f;border:2px dashed rgba(255,255,255,.3);font-size:30px;color:var(--text-dim);}
+  #skipProfileLink{margin-top:28px;background:none;color:var(--text-dim);font-size:14px;text-decoration:underline;min-height:44px;padding:6px 10px;}
+  #closeProfileBtn{
+    position:fixed;top:16px;right:16px;z-index:151;width:46px;height:46px;border-radius:50%;
+    background:rgba(255,255,255,.1);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;
+  }
+  #currentProfileBtn{background-size:cover;background-position:center;font-size:15px;font-weight:700;}
+
+  /* ---------- Screensaver ---------- */
+  #screensaverOverlay{
+    position:fixed;inset:0;z-index:160;background:#000;display:flex;align-items:center;justify-content:center;
+  }
+  #screensaverImg,#screensaverVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  #screensaverHint{
+    position:absolute;bottom:26px;left:0;right:0;text-align:center;color:rgba(255,255,255,.65);
+    font-size:13px;letter-spacing:.5px;
+  }
+
+  /* ---------- Not-available card ---------- */
+  #notAvailableCard{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:115;
+    text-align:center;max-width:420px;width:86vw;padding:0 10px;
+  }
+  #notAvailableTitle{font-size:clamp(24px,4vw,36px);margin:0 0 10px;}
+  #notAvailableDesc{color:#ddd;font-size:14px;line-height:1.5;margin:0 0 16px;}
+  .badge{
+    display:inline-block;background:rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:700;
+    padding:8px 16px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;
+  }
+  .poster-only-badge{
+    position:absolute;bottom:8px;left:8px;z-index:3;background:rgba(0,0,0,.7);color:#ddd;font-size:10.5px;
+    font-weight:700;padding:4px 8px;border-radius:4px;letter-spacing:.3px;
+  }
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap;}
+  .modal-actions button{padding:11px 18px;border-radius:5px;font-weight:700;font-size:14px;min-height:44px;}
+  .modal-actions .cancel{background:transparent;color:var(--text-dim);}
+  .modal-actions .primary{background:var(--accent);color:#fff;}
+  .modal-actions .danger{background:rgba(229,9,20,.2);color:#ff8a8f;}
+
+  /* ---------- Video player / expand modal ---------- */
+  #videoModal{background:transparent;padding:0;overflow:hidden;}
+  #videoModal.hidden{display:none;}
+  #expandThumb{
+    position:fixed;object-fit:cover;background:#000;will-change:left,top,width,height;
+    pointer-events:none;
+  }
+  #videoPlayer,#youtubePlayerContainer{
+    position:fixed;inset:0;width:100%;height:100%;background:#000;opacity:0;
+  }
+  #videoPlayer{object-fit:contain;}
+  #ytTarget{width:100%;height:100%;}
+  #manualPlayBtn{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:115;
+    width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,.92);color:#111;
+    font-size:26px;display:flex;align-items:center;justify-content:center;
+  }
+  #closeVideoBtn{
+    position:fixed;top:16px;right:16px;z-index:120;
+    width:46px;height:46px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:20px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ---------- Toast ---------- */
+  #toast{
+    position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#fff;color:#111;padding:12px 20px;border-radius:30px;font-weight:600;font-size:14px;
+    opacity:0;transition:opacity .25s, transform .25s;z-index:200;pointer-events:none;
+    max-width:88vw;text-align:center;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- Who's Watching profile gate -->
+<div id="profileScreen" class="hidden">
+  <button id="closeProfileBtn" class="hidden" aria-label="Close">✕</button>
+  <div id="profileScreenInner">
+    <h1>Who's Watching?</h1>
+    <div id="profileGrid"></div>
+    <button id="skipProfileLink" type="button">Skip for now</button>
+  </div>
+</div>
+
+<!-- Screensaver -->
+<div id="screensaverOverlay" class="hidden">
+  <img id="screensaverImg" class="hidden" alt="">
+  <video id="screensaverVideo" class="hidden" muted loop playsinline></video>
+  <div id="screensaverHint">Tap anywhere to return</div>
+</div>
+
+<nav id="topnav">
+  <div id="logoText" spellcheck="false">MYFLIX</div>
+  <div class="nav-actions">
+    <button class="icon-btn hidden" id="currentProfileBtn" aria-label="Switch profile"></button>
+    <button class="icon-btn" id="fullscreenBtn" aria-label="Toggle fullscreen">⛶</button>
+    <button class="icon-btn" id="setupBtn" aria-label="Setup">⚙</button>
+    <button class="icon-btn browse-only" id="editToggleBtn" aria-label="Edit mode">✏️</button>
+    <button class="icon-btn edit-only" id="exportBtn" aria-label="Export library">⬇</button>
+    <button class="icon-btn edit-only" id="importBtn" aria-label="Import library">⬆</button>
+    <input type="file" id="importFileInput" accept="application/json" class="hidden">
+    <button class="pill-btn danger edit-only" id="resetBtn">🗑 Reset</button>
+    <button class="pill-btn primary edit-only" id="doneEditingBtn">✓ Done</button>
+  </div>
+</nav>
+
+<div id="hero" class="hidden">
+  <div id="heroContent">
+    <h1 id="heroTitle"></h1>
+    <p id="heroDesc"></p>
+    <button class="pill-btn primary" id="heroPlayBtn">▶ Play</button>
+  </div>
+</div>
+
+<main id="rowsContainer"></main>
+
+<div id="emptyState">
+  <h2>Nothing here yet</h2>
+  <p>Tap the ✏️ pencil in the top right to switch on Edit mode, then add a row and your first title.</p>
+</div>
+
+<button id="addRowBtn" class="edit-only" aria-label="Add row">+ Add Row</button>
+
+<!-- Video Player / Expand Modal -->
+<div id="videoModal" class="modal hidden">
+  <button id="closeVideoBtn" aria-label="Close video">✕</button>
+  <img id="expandThumb" alt="">
+  <video id="videoPlayer" playsinline class="hidden"></video>
+  <div id="youtubePlayerContainer" class="hidden"></div>
+  <button id="manualPlayBtn" class="hidden" aria-label="Play video">▶</button>
+  <div id="notAvailableCard" class="hidden">
+    <h2 id="notAvailableTitle"></h2>
+    <p id="notAvailableDesc"></p>
+    <div class="badge">Not available to watch</div>
+  </div>
+</div>
+
+<!-- Tile Edit Modal -->
+<div id="tileModal" class="modal hidden">
+  <div class="modal-box">
+    <h2 id="tileModalHeading">Add Title</h2>
+
+    <div class="field">
+      <label for="tileTitleInput">Title</label>
+      <input type="text" id="tileTitleInput" maxlength="60">
+      <div class="err">Please add a title</div>
+    </div>
+
+    <div class="field">
+      <label for="tileDescInput">Description (optional)</label>
+      <textarea id="tileDescInput" maxlength="200"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Thumbnail image</label>
+      <div class="file-row">
+        <button class="file-btn" id="thumbPickBtn" type="button">Choose Image</button>
+        <input type="file" id="tileThumbInput" accept="image/*" class="hidden">
+        <img id="thumbPreview" class="thumb-preview hidden">
+      </div>
+      <div class="err" id="thumbErr">Please add a thumbnail, or paste a YouTube link below to grab one automatically</div>
+    </div>
+
+    <div class="field">
+      <label>Video source</label>
+      <div class="src-toggle">
+        <button type="button" data-mode="url" class="active">Link to video file</button>
+        <button type="button" data-mode="youtube">YouTube</button>
+        <button type="button" data-mode="upload">Upload file</button>
+        <button type="button" data-mode="none">Poster only (no video)</button>
+      </div>
+
+      <div id="videoUrlField">
+        <input type="url" id="tileUrlInput" placeholder="https://example.com/video.mp4">
+        <div class="err" id="urlErr">Please add a video link</div>
+      </div>
+
+      <div id="videoYoutubeField" class="hidden">
+        <input type="text" id="tileYoutubeInput" placeholder="Paste a YouTube link">
+        <div class="err" id="youtubeErr">Please paste a valid YouTube link</div>
+        <p class="hint">Thumbnail is grabbed automatically from YouTube. Choose your own image above if you'd rather use a custom one.</p>
+      </div>
+
+      <div id="videoUploadField" class="hidden">
+        <p class="hint">Stored only on this device. Works fine for short clips — large or long (5+ min) files may be slow to save and won't be visible on other devices. Linking is recommended for those.</p>
+        <div class="file-row">
+          <button class="file-btn" id="videoPickBtn" type="button">Choose Video File</button>
+          <input type="file" id="tileVideoFileInput" accept="video/*" class="hidden">
+        </div>
+        <div class="hint" id="videoFileName"></div>
+        <div class="err" id="uploadErr">Please choose a video file</div>
+      </div>
+
+      <div id="videoNoneField" class="hidden">
+        <p class="hint">No video needed — just the poster. Tapping this title will show a friendly "not available" card instead of trying to play anything. Handy for filling out a fake catalogue.</p>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="danger hidden" id="deleteTileBtn">Delete</button>
+      <button class="cancel" id="cancelTileBtn">Cancel</button>
+      <button class="primary" id="saveTileBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Row Edit Modal -->
+<div id="rowModal" class="modal hidden">
+  <div class="modal-box">
+    <h2 id="rowModalHeading">Add Row</h2>
+    <div class="field">
+      <label for="rowTitleInput">Row name</label>
+      <input type="text" id="rowTitleInput" maxlength="40">
+      <div class="err">Please add a row name</div>
+    </div>
+    <div class="modal-actions">
+      <button class="danger hidden" id="deleteRowBtn">Delete Row</button>
+      <button class="cancel" id="cancelRowBtn">Cancel</button>
+      <button class="primary" id="saveRowBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Setup Modal -->
+<div id="setupModal" class="modal hidden">
+  <div class="modal-box">
+    <h2>Setup</h2>
+
+    <h3>Branding</h3>
+    <div class="field">
+      <label for="appNameInput">App name</label>
+      <input type="text" id="appNameInput" maxlength="20">
+    </div>
+    <div class="field">
+      <label>Accent colour</label>
+      <div class="swatch-grid" id="colorSwatches"></div>
+      <div class="custom-color-row">
+        <label for="customColorInput">Custom:</label>
+        <input type="color" id="customColorInput">
+      </div>
+    </div>
+
+    <h3>Profile Login Screen</h3>
+    <div class="field">
+      <label>Show "Who's Watching?" on load</label>
+      <button type="button" id="profilesToggleBtn" class="toggle-btn">Off</button>
+    </div>
+    <div class="field">
+      <button type="button" class="pill-btn primary" id="manageProfilesBtn">👤 Manage Profiles</button>
+    </div>
+
+    <h3>Screensaver</h3>
+    <div class="field">
+      <label>Auto-play when idle</label>
+      <button type="button" id="screensaverToggleBtn" class="toggle-btn">Off</button>
+    </div>
+    <div class="field">
+      <label for="screensaverIdleInput">Trigger after (minutes idle)</label>
+      <input type="number" id="screensaverIdleInput" min="1" max="60" value="5">
+    </div>
+    <div class="field">
+      <label>Background image or short video</label>
+      <div class="file-row">
+        <button class="file-btn" id="screensaverPickBtn" type="button">Choose File</button>
+        <input type="file" id="screensaverFileInput" accept="image/*,video/*" class="hidden">
+      </div>
+      <div class="hint" id="screensaverFileName"></div>
+    </div>
+    <div class="field">
+      <button type="button" class="pill-btn primary" id="screensaverPlayNowBtn">▶ Play Screensaver Now</button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel" id="cancelSetupBtn">Cancel</button>
+      <button class="primary" id="saveSetupBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Profile Modal -->
+<div id="profileModal" class="modal hidden">
+  <div class="modal-box">
+    <h2 id="profileModalHeading">Add Profile</h2>
+    <div class="field">
+      <label for="profileNameInput">Name</label>
+      <input type="text" id="profileNameInput" maxlength="20">
+      <div class="err" id="profileNameErr">Please add a name</div>
+    </div>
+    <div class="field">
+      <label>Avatar colour</label>
+      <div class="swatch-grid" id="avatarSwatches"></div>
+    </div>
+    <div class="field">
+      <label>Or use a custom photo</label>
+      <div class="file-row">
+        <button class="file-btn" id="avatarPickBtn" type="button">Choose Image</button>
+        <input type="file" id="profileAvatarInput" accept="image/*" class="hidden">
+        <img id="avatarPreview" class="thumb-preview hidden">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="danger hidden" id="deleteProfileBtn">Delete</button>
+      <button class="cancel" id="cancelProfileBtn">Cancel</button>
+      <button class="primary" id="saveProfileBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-box small">
+    <p id="confirmText" style="font-size:15px;line-height:1.5;"></p>
+    <div class="modal-actions" style="justify-content:center;">
+      <button class="cancel" id="confirmCancelBtn">Cancel</button>
+      <button class="danger" id="confirmOkBtn">Yes, continue</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===================== Diagnostics ===================== */
+window.addEventListener('error', e=>{ console.error('StreamFlix error:', e.error || e.message); });
+window.addEventListener('unhandledrejection', e=>{ console.error('StreamFlix rejection:', e.reason); });
+
+/* ===================== IndexedDB helpers ===================== */
+const DB_NAME = 'streamflixDB';
+const DB_VERSION = 2;
+let db = null;
+let dbAvailable = true;
+const memoryStore = { thumbnails:new Map(), videos:new Map(), avatars:new Map(), screensaver:new Map() };
+
+function openDB(){
+  return new Promise((resolve)=>{
+    try{
+      if(!window.indexedDB){ dbAvailable = false; resolve(); return; }
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = e=>{
+        const d = e.target.result;
+        if(!d.objectStoreNames.contains('thumbnails')) d.createObjectStore('thumbnails');
+        if(!d.objectStoreNames.contains('videos')) d.createObjectStore('videos');
+        if(!d.objectStoreNames.contains('avatars')) d.createObjectStore('avatars');
+        if(!d.objectStoreNames.contains('screensaver')) d.createObjectStore('screensaver');
+      };
+      req.onsuccess = e=>{ db = e.target.result; resolve(); };
+      req.onerror = ()=>{
+        dbAvailable = false;
+        toast("This browser won't save images/videos for this file when opened directly — it'll still work this session. Host on Netlify for full saving.");
+        resolve();
+      };
+      req.onblocked = ()=>{ dbAvailable = false; resolve(); };
+    }catch(e){
+      dbAvailable = false;
+      resolve();
+    }
+  });
+}
+function idbPut(store,key,val){
+  if(!dbAvailable){ memoryStore[store].set(key,val); return Promise.resolve(); }
+  return new Promise((resolve)=>{
+    try{
+      const tx = db.transaction(store,'readwrite');
+      tx.objectStore(store).put(val,key);
+      tx.oncomplete = ()=>resolve();
+      tx.onerror = ()=>{ memoryStore[store].set(key,val); resolve(); };
+    }catch(e){
+      memoryStore[store].set(key,val); resolve();
+    }
+  });
+}
+function idbGet(store,key){
+  if(!dbAvailable){ return Promise.resolve(memoryStore[store].get(key) || null); }
+  return new Promise((resolve)=>{
+    try{
+      const tx = db.transaction(store,'readonly');
+      const req = tx.objectStore(store).get(key);
+      req.onsuccess = ()=>resolve(req.result || null);
+      req.onerror = ()=> resolve(memoryStore[store].get(key) || null);
+    }catch(e){
+      resolve(memoryStore[store].get(key) || null);
+    }
+  });
+}
+function idbDelete(store,key){
+  if(!dbAvailable){ memoryStore[store].delete(key); return Promise.resolve(); }
+  return new Promise((resolve)=>{
+    try{
+      const tx = db.transaction(store,'readwrite');
+      tx.objectStore(store).delete(key);
+      tx.oncomplete = ()=>resolve();
+      tx.onerror = ()=>resolve();
+    }catch(e){ resolve(); }
+  });
+}
+function idbClear(store){
+  if(!dbAvailable){ memoryStore[store].clear(); return Promise.resolve(); }
+  return new Promise((resolve)=>{
+    try{
+      const tx = db.transaction(store,'readwrite');
+      tx.objectStore(store).clear();
+      tx.oncomplete = ()=>resolve();
+      tx.onerror = ()=>resolve();
+    }catch(e){ resolve(); }
+  });
+}
+function blobToDataUrl(blob){
+  return new Promise(resolve=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(r.result);
+    r.readAsDataURL(blob);
+  });
+}
+
+/* ===================== YouTube helpers ===================== */
+function extractYouTubeId(url){
+  if(!url) return null;
+  const patterns = [
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/live\/([a-zA-Z0-9_-]{11})/
+  ];
+  for(const p of patterns){ const m = url.match(p); if(m) return m[1]; }
+  try{
+    const u = new URL(url);
+    const v = u.searchParams.get('v');
+    if(v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return v;
+  }catch(e){}
+  if(/^[a-zA-Z0-9_-]{11}$/.test(url.trim())) return url.trim();
+  return null;
+}
+function resolveYouTubeThumb(videoId){
+  return new Promise(resolve=>{
+    const maxres = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    const hq = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    const img = new Image();
+    img.onload = ()=>{ resolve(img.naturalWidth > 120 ? maxres : hq); };
+    img.onerror = ()=> resolve(hq);
+    img.src = maxres;
+  });
+}
+let ytApiPromise = null;
+function loadYouTubeAPI(){
+  if(window.YT && window.YT.Player) return Promise.resolve();
+  if(ytApiPromise) return ytApiPromise;
+  ytApiPromise = new Promise(resolve=>{
+    window.onYouTubeIframeAPIReady = ()=> resolve();
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  });
+  return ytApiPromise;
+}
+let ytPlayer = null;
+async function startYouTube(videoId){
+  await loadYouTubeAPI();
+  return new Promise(resolve=>{
+    youtubePlayerContainer.innerHTML = '<div id="ytTarget"></div>';
+    try{
+      ytPlayer = new YT.Player('ytTarget', {
+        width:'100%', height:'100%', videoId: videoId,
+        playerVars:{ autoplay:1, playsinline:1, rel:0, modestbranding:1 },
+        events:{
+          onReady:(e)=>{ try{ e.target.playVideo(); }catch(err){} resolve(true); },
+          onError:()=> resolve(false)
+        }
+      });
+    }catch(e){ resolve(false); }
+  });
+}
+function debounce(fn,delay){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args),delay); }; }
+
+/* ===================== State ===================== */
+const STATE_KEY = 'streamflixState';
+const TITLE_KEY = 'streamflixTitle';
+let state = loadState();
+let editMode = false;
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STATE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return { rows: [] };
+}
+function saveState(){ localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
+function uid(){ return 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+async function getThumbUrl(tile){
+  if(tile.thumbMode === 'youtube-auto' && tile.youtubeThumbUrl) return tile.youtubeThumbUrl;
+  const blob = await idbGet('thumbnails', tile.id);
+  return blob ? URL.createObjectURL(blob) : null;
+}
+
+/* ===================== DOM refs ===================== */
+const $ = id=>document.getElementById(id);
+const logoText = $('logoText');
+const editToggleBtn = $('editToggleBtn');
+const doneEditingBtn = $('doneEditingBtn');
+const resetBtn = $('resetBtn');
+const exportBtn = $('exportBtn');
+const importBtn = $('importBtn');
+const importFileInput = $('importFileInput');
+const fullscreenBtn = $('fullscreenBtn');
+const rowsContainer = $('rowsContainer');
+const emptyState = $('emptyState');
+const addRowBtn = $('addRowBtn');
+const heroEl = $('hero');
+const heroTitle = $('heroTitle');
+const heroDesc = $('heroDesc');
+const heroPlayBtn = $('heroPlayBtn');
+let currentHeroTile = null;
+
+const videoModal = $('videoModal');
+const expandThumb = $('expandThumb');
+const videoPlayer = $('videoPlayer');
+const youtubePlayerContainer = $('youtubePlayerContainer');
+const manualPlayBtn = $('manualPlayBtn');
+const closeVideoBtn = $('closeVideoBtn');
+
+const tileModal = $('tileModal');
+const tileModalHeading = $('tileModalHeading');
+const tileTitleInput = $('tileTitleInput');
+const tileDescInput = $('tileDescInput');
+const thumbPickBtn = $('thumbPickBtn');
+const tileThumbInput = $('tileThumbInput');
+const thumbPreview = $('thumbPreview');
+const thumbErr = $('thumbErr');
+const srcToggleBtns = document.querySelectorAll('.src-toggle button');
+const videoUrlField = $('videoUrlField');
+const videoYoutubeField = $('videoYoutubeField');
+const videoUploadField = $('videoUploadField');
+const videoNoneField = $('videoNoneField');
+const tileUrlInput = $('tileUrlInput');
+const urlErr = $('urlErr');
+const tileYoutubeInput = $('tileYoutubeInput');
+const youtubeErr = $('youtubeErr');
+const videoPickBtn = $('videoPickBtn');
+const tileVideoFileInput = $('tileVideoFileInput');
+const videoFileName = $('videoFileName');
+const uploadErr = $('uploadErr');
+const deleteTileBtn = $('deleteTileBtn');
+const cancelTileBtn = $('cancelTileBtn');
+const saveTileBtn = $('saveTileBtn');
+
+const rowModal = $('rowModal');
+const rowModalHeading = $('rowModalHeading');
+const rowTitleInput = $('rowTitleInput');
+const deleteRowBtn = $('deleteRowBtn');
+const cancelRowBtn = $('cancelRowBtn');
+const saveRowBtn = $('saveRowBtn');
+
+const setupBtn = $('setupBtn');
+const setupModal = $('setupModal');
+const appNameInput = $('appNameInput');
+const colorSwatches = $('colorSwatches');
+const customColorInput = $('customColorInput');
+const cancelSetupBtn = $('cancelSetupBtn');
+const saveSetupBtn = $('saveSetupBtn');
+
+const profilesToggleBtn = $('profilesToggleBtn');
+const manageProfilesBtn = $('manageProfilesBtn');
+const screensaverToggleBtn = $('screensaverToggleBtn');
+const screensaverIdleInput = $('screensaverIdleInput');
+const screensaverPickBtn = $('screensaverPickBtn');
+const screensaverFileInput = $('screensaverFileInput');
+const screensaverFileName = $('screensaverFileName');
+const screensaverPlayNowBtn = $('screensaverPlayNowBtn');
+
+const profileScreen = $('profileScreen');
+const profileGrid = $('profileGrid');
+const skipProfileLink = $('skipProfileLink');
+const closeProfileBtn = $('closeProfileBtn');
+const currentProfileBtn = $('currentProfileBtn');
+
+const profileModal = $('profileModal');
+const profileModalHeading = $('profileModalHeading');
+const profileNameInput = $('profileNameInput');
+const profileNameErr = $('profileNameErr');
+const avatarSwatches = $('avatarSwatches');
+const avatarPickBtn = $('avatarPickBtn');
+const profileAvatarInput = $('profileAvatarInput');
+const avatarPreview = $('avatarPreview');
+const deleteProfileBtn = $('deleteProfileBtn');
+const cancelProfileBtn = $('cancelProfileBtn');
+const saveProfileBtn = $('saveProfileBtn');
+
+const screensaverOverlay = $('screensaverOverlay');
+const screensaverImg = $('screensaverImg');
+const screensaverVideo = $('screensaverVideo');
+
+const notAvailableCard = $('notAvailableCard');
+const notAvailableTitle = $('notAvailableTitle');
+const notAvailableDesc = $('notAvailableDesc');
+
+const confirmModal = $('confirmModal');
+const confirmText = $('confirmText');
+const confirmOkBtn = $('confirmOkBtn');
+const confirmCancelBtn = $('confirmCancelBtn');
+
+const toastEl = $('toast');
+let toastTimer;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toastEl.classList.remove('show'), 3200);
+}
+
+function confirmDialog(text){
+  return new Promise(resolve=>{
+    confirmText.textContent = text;
+    confirmModal.classList.remove('hidden');
+    confirmOkBtn.onclick = ()=>{ confirmModal.classList.add('hidden'); resolve(true); };
+    confirmCancelBtn.onclick = ()=>{ confirmModal.classList.add('hidden'); resolve(false); };
+  });
+}
+
+/* ===================== Edit mode ===================== */
+function setEditMode(on){
+  editMode = on;
+  document.body.classList.toggle('edit-mode', on);
+  render();
+}
+editToggleBtn.addEventListener('click', ()=> setEditMode(true));
+doneEditingBtn.addEventListener('click', ()=> setEditMode(false));
+
+function goHome(){
+  if(!videoModal.classList.contains('hidden')) closeVideo();
+  if(!profileScreen.classList.contains('hidden') && !closeProfileBtn.classList.contains('hidden')){
+    profileScreen.classList.add('hidden');
+  }
+  if(editMode) setEditMode(false);
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+logoText.addEventListener('click', goHome);
+
+/* ===================== Setup (name + colour palette) ===================== */
+const ACCENT_KEY = 'streamflixAccent';
+const PRESET_COLORS = [
+  {name:'Netflix Red', hex:'#e50914'},
+  {name:'Electric Blue', hex:'#1e90ff'},
+  {name:'Royal Purple', hex:'#7c3aed'},
+  {name:'Emerald', hex:'#10b981'},
+  {name:'Sunset Orange', hex:'#f97316'},
+  {name:'Hot Pink', hex:'#ec4899'},
+  {name:'Cyan', hex:'#06b6d4'},
+  {name:'Gold', hex:'#eab308'},
+  {name:'Crimson', hex:'#dc2626'},
+  {name:'Teal', hex:'#14b8a6'},
+  {name:'Indigo', hex:'#4f46e5'},
+  {name:'Lime', hex:'#84cc16'}
+];
+let pendingAccent = '#e50914';
+
+function applyAccent(hex){
+  document.documentElement.style.setProperty('--accent', hex);
+}
+function renderSwatches(){
+  colorSwatches.innerHTML = '';
+  PRESET_COLORS.forEach(c=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'swatch';
+    b.style.background = c.hex;
+    b.setAttribute('aria-label', c.name);
+    if(c.hex.toLowerCase() === (pendingAccent||'').toLowerCase()) b.classList.add('selected');
+    b.onclick = ()=>{ pendingAccent = c.hex; customColorInput.value = c.hex; renderSwatches(); };
+    colorSwatches.appendChild(b);
+  });
+}
+customColorInput.addEventListener('input', ()=>{ pendingAccent = customColorInput.value; renderSwatches(); });
+
+function syncToggleBtn(btn, on){
+  btn.textContent = on ? 'On' : 'Off';
+  btn.classList.toggle('on', on);
+}
+
+setupBtn.addEventListener('click', async ()=>{
+  appNameInput.value = logoText.textContent.trim();
+  pendingAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#e50914';
+  customColorInput.value = pendingAccent;
+  renderSwatches();
+
+  draftProfilesEnabled = profilesEnabled;
+  syncToggleBtn(profilesToggleBtn, draftProfilesEnabled);
+
+  draftScreensaverEnabled = screensaverEnabled;
+  syncToggleBtn(screensaverToggleBtn, draftScreensaverEnabled);
+  screensaverIdleInput.value = screensaverIdleMin;
+  pendingScreensaverFile = null;
+  const existingMedia = await idbGet('screensaver', 'media');
+  screensaverFileName.textContent = existingMedia
+    ? 'A background is already set ✓ (choose a new file to replace it)'
+    : 'No background set yet';
+
+  setupModal.classList.remove('hidden');
+});
+cancelSetupBtn.addEventListener('click', ()=> setupModal.classList.add('hidden'));
+saveSetupBtn.addEventListener('click', async ()=>{
+  const name = appNameInput.value.trim() || 'MYFLIX';
+  logoText.textContent = name;
+  localStorage.setItem(TITLE_KEY, name);
+  applyAccent(pendingAccent);
+  localStorage.setItem(ACCENT_KEY, pendingAccent);
+
+  profilesEnabled = draftProfilesEnabled;
+  localStorage.setItem(PROFILES_ENABLED_KEY, String(profilesEnabled));
+  await updateCurrentProfileBtn();
+
+  screensaverEnabled = draftScreensaverEnabled;
+  localStorage.setItem(SCREENSAVER_ENABLED_KEY, String(screensaverEnabled));
+  const idleVal = Math.max(1, Math.min(60, parseInt(screensaverIdleInput.value, 10) || 5));
+  screensaverIdleMin = idleVal;
+  localStorage.setItem(SCREENSAVER_IDLE_KEY, String(idleVal));
+  if(pendingScreensaverFile){
+    await idbPut('screensaver', 'media', pendingScreensaverFile);
+    localStorage.setItem(SCREENSAVER_TYPE_KEY, pendingScreensaverFile.type.startsWith('video') ? 'video' : 'image');
+  }
+  resetIdleTimer();
+
+  setupModal.classList.add('hidden');
+  toast('Setup saved');
+});
+
+/* ===================== Profiles ===================== */
+const PROFILES_KEY = 'streamflixProfiles';
+const CURRENT_PROFILE_KEY = 'streamflixCurrentProfile';
+const PROFILES_ENABLED_KEY = 'streamflixProfilesEnabled';
+
+let profiles = loadProfiles();
+let currentProfileId = localStorage.getItem(CURRENT_PROFILE_KEY) || null;
+let profilesEnabled = localStorage.getItem(PROFILES_ENABLED_KEY) === 'true';
+let draftProfilesEnabled = profilesEnabled;
+
+function loadProfiles(){
+  try{
+    const raw = localStorage.getItem(PROFILES_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return [];
+}
+function saveProfiles(){ localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles)); }
+function initials(name){
+  return (name || '?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+async function getAvatarUrl(profile){
+  if(profile.avatarType === 'image'){
+    const blob = await idbGet('avatars', profile.id);
+    return blob ? URL.createObjectURL(blob) : null;
+  }
+  return null;
+}
+
+profilesToggleBtn.addEventListener('click', ()=>{
+  draftProfilesEnabled = !draftProfilesEnabled;
+  syncToggleBtn(profilesToggleBtn, draftProfilesEnabled);
+});
+manageProfilesBtn.addEventListener('click', ()=>{
+  setupModal.classList.add('hidden');
+  openProfileScreen(true);
+});
+
+async function renderProfileGrid(){
+  profileGrid.innerHTML = '';
+  for(const p of profiles){
+    const tile = document.createElement('div');
+    tile.className = 'profile-tile';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'profile-avatar';
+    const imgUrl = await getAvatarUrl(p);
+    if(imgUrl){
+      avatar.style.backgroundImage = `url(${imgUrl})`;
+    } else {
+      avatar.style.background = p.avatarColor || '#e50914';
+      avatar.textContent = initials(p.name);
+    }
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'profile-name';
+    nameEl.textContent = p.name;
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'profile-edit-btn';
+    editBtn.setAttribute('aria-label', 'Edit profile');
+    editBtn.textContent = '✏️';
+    editBtn.onclick = (e)=>{ e.stopPropagation(); openProfileModal(p); };
+
+    tile.appendChild(avatar);
+    tile.appendChild(nameEl);
+    tile.appendChild(editBtn);
+    tile.onclick = ()=> selectProfile(p);
+    profileGrid.appendChild(tile);
+  }
+  const addTile = document.createElement('div');
+  addTile.className = 'profile-tile add-profile';
+  addTile.innerHTML = `<div class="profile-avatar">+</div><div class="profile-name">Add Profile</div>`;
+  addTile.onclick = ()=> openProfileModal(null);
+  profileGrid.appendChild(addTile);
+}
+
+function openProfileScreen(closable){
+  closeProfileBtn.classList.toggle('hidden', !closable);
+  skipProfileLink.classList.toggle('hidden', !!closable);
+  renderProfileGrid();
+  profileScreen.classList.remove('hidden');
+}
+closeProfileBtn.addEventListener('click', ()=> profileScreen.classList.add('hidden'));
+skipProfileLink.addEventListener('click', ()=> profileScreen.classList.add('hidden'));
+
+async function selectProfile(profile){
+  currentProfileId = profile.id;
+  localStorage.setItem(CURRENT_PROFILE_KEY, profile.id);
+  profileScreen.classList.add('hidden');
+  await updateCurrentProfileBtn();
+  toast(`Welcome, ${profile.name}!`);
+}
+
+async function updateCurrentProfileBtn(){
+  if(!profilesEnabled){
+    currentProfileBtn.classList.add('hidden');
+    return;
+  }
+  currentProfileBtn.classList.remove('hidden');
+  const p = profiles.find(p=>p.id===currentProfileId);
+  if(!p){
+    currentProfileBtn.style.backgroundImage = 'none';
+    currentProfileBtn.style.background = 'rgba(255,255,255,.12)';
+    currentProfileBtn.textContent = '👤';
+    return;
+  }
+  const imgUrl = await getAvatarUrl(p);
+  if(imgUrl){
+    currentProfileBtn.style.backgroundImage = `url(${imgUrl})`;
+    currentProfileBtn.textContent = '';
+  } else {
+    currentProfileBtn.style.backgroundImage = 'none';
+    currentProfileBtn.style.background = p.avatarColor || '#e50914';
+    currentProfileBtn.textContent = initials(p.name);
+  }
+}
+currentProfileBtn.addEventListener('click', ()=> openProfileScreen(true));
+
+/* Add/Edit profile modal */
+let editingProfile = null;
+let pendingAvatarFile = null;
+let pendingAvatarColor = '#e50914';
+let avatarSelectionTouched = false;
+
+function renderAvatarSwatches(){
+  avatarSwatches.innerHTML = '';
+  PRESET_COLORS.forEach(c=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'swatch';
+    b.style.background = c.hex;
+    b.setAttribute('aria-label', c.name);
+    if(c.hex.toLowerCase() === (pendingAvatarColor||'').toLowerCase()) b.classList.add('selected');
+    b.onclick = ()=>{
+      pendingAvatarColor = c.hex;
+      pendingAvatarFile = null;
+      avatarSelectionTouched = true;
+      avatarPreview.classList.add('hidden');
+      avatarPreview.src = '';
+      renderAvatarSwatches();
+    };
+    avatarSwatches.appendChild(b);
+  });
+}
+
+async function openProfileModal(profile){
+  editingProfile = profile;
+  profileModalHeading.textContent = profile ? 'Edit Profile' : 'Add Profile';
+  deleteProfileBtn.classList.toggle('hidden', !profile);
+  profileNameInput.classList.remove('invalid');
+  profileNameErr.classList.remove('show');
+  pendingAvatarFile = null;
+  avatarSelectionTouched = false;
+  avatarPreview.classList.add('hidden');
+  avatarPreview.src = '';
+
+  if(profile){
+    profileNameInput.value = profile.name;
+    pendingAvatarColor = profile.avatarColor || '#e50914';
+    if(profile.avatarType === 'image'){
+      const blob = await idbGet('avatars', profile.id);
+      if(blob){ avatarPreview.src = URL.createObjectURL(blob); avatarPreview.classList.remove('hidden'); }
+    }
+  } else {
+    profileNameInput.value = '';
+    pendingAvatarColor = PRESET_COLORS[Math.floor(Math.random()*PRESET_COLORS.length)].hex;
+  }
+  renderAvatarSwatches();
+  profileModal.classList.remove('hidden');
+}
+
+avatarPickBtn.addEventListener('click', ()=> profileAvatarInput.click());
+profileAvatarInput.addEventListener('change', ()=>{
+  const file = profileAvatarInput.files[0];
+  if(!file) return;
+  pendingAvatarFile = file;
+  avatarPreview.src = URL.createObjectURL(file);
+  avatarPreview.classList.remove('hidden');
+});
+cancelProfileBtn.addEventListener('click', ()=> profileModal.classList.add('hidden'));
+
+saveProfileBtn.addEventListener('click', async ()=>{
+  const name = profileNameInput.value.trim();
+  profileNameInput.classList.toggle('invalid', !name);
+  profileNameErr.classList.toggle('show', !name);
+  if(!name) return;
+
+  const profile = editingProfile || { id: uid() };
+  profile.name = name;
+
+  if(pendingAvatarFile){
+    profile.avatarType = 'image';
+    await idbPut('avatars', profile.id, pendingAvatarFile);
+  } else if(avatarSelectionTouched || !editingProfile){
+    profile.avatarType = 'color';
+    profile.avatarColor = pendingAvatarColor;
+    if(editingProfile && editingProfile.avatarType === 'image'){
+      await idbDelete('avatars', profile.id);
+    }
+  }
+
+  if(!editingProfile) profiles.push(profile);
+  saveProfiles();
+  profileModal.classList.add('hidden');
+  renderProfileGrid();
+  await updateCurrentProfileBtn();
+  toast('Profile saved');
+});
+
+deleteProfileBtn.addEventListener('click', async ()=>{
+  const ok = await confirmDialog(`Delete the profile "${editingProfile.name}"?`);
+  if(!ok) return;
+  profiles = profiles.filter(p=>p.id !== editingProfile.id);
+  saveProfiles();
+  await idbDelete('avatars', editingProfile.id);
+  if(currentProfileId === editingProfile.id){
+    currentProfileId = null;
+    localStorage.removeItem(CURRENT_PROFILE_KEY);
+  }
+  profileModal.classList.add('hidden');
+  renderProfileGrid();
+  await updateCurrentProfileBtn();
+  toast('Profile deleted');
+});
+
+/* ===================== Screensaver ===================== */
+const SCREENSAVER_ENABLED_KEY = 'streamflixScreensaverEnabled';
+const SCREENSAVER_IDLE_KEY = 'streamflixScreensaverIdleMin';
+const SCREENSAVER_TYPE_KEY = 'streamflixScreensaverType';
+
+let screensaverEnabled = localStorage.getItem(SCREENSAVER_ENABLED_KEY) === 'true';
+let draftScreensaverEnabled = screensaverEnabled;
+let screensaverIdleMin = parseInt(localStorage.getItem(SCREENSAVER_IDLE_KEY) || '5', 10) || 5;
+let idleTimer = null;
+let pendingScreensaverFile = null;
+
+function resetIdleTimer(){
+  if(idleTimer) clearTimeout(idleTimer);
+  if(!screensaverEnabled) return;
+  if(!screensaverOverlay.classList.contains('hidden')) return;
+  idleTimer = setTimeout(triggerScreensaver, screensaverIdleMin * 60000);
+}
+['mousemove','pointerdown','touchstart','keydown','scroll','wheel'].forEach(evt=>{
+  document.addEventListener(evt, resetIdleTimer, { passive:true });
+});
+
+async function triggerScreensaver(){
+  if(editMode){ resetIdleTimer(); return; }
+  if(!videoModal.classList.contains('hidden')){ resetIdleTimer(); return; }
+  if(!profileScreen.classList.contains('hidden')){ resetIdleTimer(); return; }
+  await showScreensaverNow();
+}
+
+async function showScreensaverNow(){
+  const blob = await idbGet('screensaver', 'media');
+  if(!blob){ toast('No screensaver background set yet — add one in Setup'); return; }
+  const type = localStorage.getItem(SCREENSAVER_TYPE_KEY) || 'image';
+  const url = URL.createObjectURL(blob);
+  if(type === 'video'){
+    screensaverVideo.src = url;
+    screensaverVideo.classList.remove('hidden');
+    screensaverImg.classList.add('hidden');
+    screensaverVideo.play().catch(()=>{});
+  } else {
+    screensaverImg.src = url;
+    screensaverImg.classList.remove('hidden');
+    screensaverVideo.classList.add('hidden');
+  }
+  screensaverOverlay.classList.remove('hidden');
+  attemptFullscreen(screensaverOverlay);
+}
+function hideScreensaver(){
+  if(screensaverOverlay.classList.contains('hidden')) return;
+  screensaverOverlay.classList.add('hidden');
+  screensaverVideo.pause();
+  screensaverVideo.removeAttribute('src');
+  resetIdleTimer();
+}
+screensaverOverlay.addEventListener('click', hideScreensaver);
+document.addEventListener('keydown', ()=>{
+  if(!screensaverOverlay.classList.contains('hidden')) hideScreensaver();
+});
+
+screensaverToggleBtn.addEventListener('click', ()=>{
+  draftScreensaverEnabled = !draftScreensaverEnabled;
+  syncToggleBtn(screensaverToggleBtn, draftScreensaverEnabled);
+});
+screensaverPickBtn.addEventListener('click', ()=> screensaverFileInput.click());
+screensaverFileInput.addEventListener('change', ()=>{
+  const file = screensaverFileInput.files[0];
+  if(!file) return;
+  pendingScreensaverFile = file;
+  const mb = (file.size/1024/1024).toFixed(1);
+  screensaverFileName.textContent = `Selected: ${file.name} (${mb} MB)`;
+});
+screensaverPlayNowBtn.addEventListener('click', ()=>{
+  setupModal.classList.add('hidden');
+  showScreensaverNow();
+});
+
+/* ===================== Fullscreen ===================== */
+function attemptFullscreen(el){
+  try{
+    if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+    else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  }catch(e){}
+}
+fullscreenBtn.addEventListener('click', ()=>{
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen().catch(()=>{});
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+/* ===================== Reset everything ===================== */
+resetBtn.addEventListener('click', async ()=>{
+  const ok = await confirmDialog('This will permanently delete every row, title, thumbnail and uploaded video on this device. This cannot be undone. Continue?');
+  if(!ok) return;
+  state = { rows: [] };
+  saveState();
+  await idbClear('thumbnails');
+  await idbClear('videos');
+  setEditMode(false);
+  toast('Everything has been reset');
+});
+
+/* ===================== Export / Import ===================== */
+exportBtn.addEventListener('click', async ()=>{
+  const exportRows = [];
+  let uploadCount = 0;
+  for(const row of state.rows){
+    const tiles = [];
+    for(const tile of row.tiles){
+      const t = Object.assign({}, tile);
+      if(tile.videoType === 'upload') uploadCount++;
+      if(tile.thumbMode === 'custom'){
+        const blob = await idbGet('thumbnails', tile.id);
+        if(blob) t.thumbDataUrl = await blobToDataUrl(blob);
+      }
+      tiles.push(t);
+    }
+    exportRows.push({ id: row.id, title: row.title, tiles });
+  }
+
+  const exportProfiles = [];
+  for(const p of profiles){
+    const ep = Object.assign({}, p);
+    if(p.avatarType === 'image'){
+      const blob = await idbGet('avatars', p.id);
+      if(blob) ep.avatarDataUrl = await blobToDataUrl(blob);
+    }
+    exportProfiles.push(ep);
+  }
+
+  let screensaverDataUrl = null;
+  const ssBlob = await idbGet('screensaver', 'media');
+  if(ssBlob) screensaverDataUrl = await blobToDataUrl(ssBlob);
+
+  const payload = {
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    logo: logoText.textContent.trim(),
+    accent: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+    rows: exportRows,
+    profiles: exportProfiles,
+    profilesEnabled: profilesEnabled,
+    screensaver: {
+      enabled: screensaverEnabled,
+      idleMin: screensaverIdleMin,
+      type: localStorage.getItem(SCREENSAVER_TYPE_KEY) || 'image',
+      dataUrl: screensaverDataUrl
+    }
+  };
+  const blob = new Blob([JSON.stringify(payload)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `streamflix-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast(uploadCount>0
+    ? `Exported. ${uploadCount} title(s) use an uploaded video file and won't carry over — link or re-upload those on the other device.`
+    : 'Library exported');
+});
+
+importBtn.addEventListener('click', ()=> importFileInput.click());
+importFileInput.addEventListener('change', async ()=>{
+  const file = importFileInput.files[0];
+  importFileInput.value = '';
+  if(!file) return;
+  const ok = await confirmDialog('Importing will replace everything currently saved in this browser. Continue?');
+  if(!ok) return;
+  try{
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    if(!payload || !Array.isArray(payload.rows)) throw new Error('bad format');
+    await idbClear('thumbnails');
+    await idbClear('videos');
+    await idbClear('avatars');
+    const newRows = [];
+    for(const row of payload.rows){
+      const tiles = [];
+      for(const t of row.tiles){
+        const tile = Object.assign({}, t);
+        if(tile.thumbDataUrl){
+          const resBlob = await (await fetch(tile.thumbDataUrl)).blob();
+          await idbPut('thumbnails', tile.id, resBlob);
+          delete tile.thumbDataUrl;
+        }
+        tiles.push(tile);
+      }
+      newRows.push({ id: row.id, title: row.title, tiles });
+    }
+    state = { rows: newRows };
+    saveState();
+    if(payload.logo){ logoText.textContent = payload.logo; localStorage.setItem(TITLE_KEY, payload.logo); }
+    if(payload.accent){ applyAccent(payload.accent); localStorage.setItem(ACCENT_KEY, payload.accent); }
+
+    if(Array.isArray(payload.profiles)){
+      const newProfiles = [];
+      for(const p of payload.profiles){
+        const prof = Object.assign({}, p);
+        if(prof.avatarDataUrl){
+          const resBlob = await (await fetch(prof.avatarDataUrl)).blob();
+          await idbPut('avatars', prof.id, resBlob);
+          delete prof.avatarDataUrl;
+        }
+        newProfiles.push(prof);
+      }
+      profiles = newProfiles;
+      saveProfiles();
+    }
+    if(typeof payload.profilesEnabled === 'boolean'){
+      profilesEnabled = payload.profilesEnabled;
+      localStorage.setItem(PROFILES_ENABLED_KEY, String(profilesEnabled));
+    }
+    if(payload.screensaver){
+      screensaverEnabled = !!payload.screensaver.enabled;
+      localStorage.setItem(SCREENSAVER_ENABLED_KEY, String(screensaverEnabled));
+      if(payload.screensaver.idleMin){
+        screensaverIdleMin = payload.screensaver.idleMin;
+        localStorage.setItem(SCREENSAVER_IDLE_KEY, String(screensaverIdleMin));
+      }
+      if(payload.screensaver.dataUrl){
+        const resBlob = await (await fetch(payload.screensaver.dataUrl)).blob();
+        await idbPut('screensaver', 'media', resBlob);
+        localStorage.setItem(SCREENSAVER_TYPE_KEY, payload.screensaver.type || 'image');
+      }
+    }
+    await updateCurrentProfileBtn();
+    resetIdleTimer();
+
+    render();
+    toast('Library imported');
+  }catch(e){
+    toast('Could not read that file — make sure it is a StreamFlix export');
+  }
+});
+
+/* ===================== Rendering ===================== */
+async function render(){
+  rowsContainer.innerHTML = '';
+  const hasRows = state.rows.length > 0;
+  emptyState.classList.toggle('hidden', hasRows);
+
+  await renderHero();
+
+  if(hasRows){
+    for(const row of state.rows){
+      rowsContainer.appendChild(await buildRowEl(row));
+    }
+  }
+}
+
+let heroQueue = [];
+let heroIndex = 0;
+let heroTimer = null;
+const HERO_ROTATE_MS = 7000;
+
+function stopHeroRotation(){
+  if(heroTimer){ clearInterval(heroTimer); heroTimer = null; }
+}
+function startHeroRotation(){
+  stopHeroRotation();
+  if(editMode || heroQueue.length <= 1) return;
+  heroTimer = setInterval(()=>{
+    heroIndex = (heroIndex+1) % heroQueue.length;
+    showHeroTile(heroQueue[heroIndex], true);
+  }, HERO_ROTATE_MS);
+}
+
+async function showHeroTile(tile, animate){
+  currentHeroTile = tile;
+  const apply = async ()=>{
+    heroTitle.textContent = tile.title;
+    heroDesc.textContent = tile.description || '';
+    heroDesc.style.display = tile.description ? 'block' : 'none';
+    const url = await getThumbUrl(tile);
+    heroEl.style.backgroundImage = url ? `url(${url})` : 'none';
+  };
+  if(animate){
+    heroEl.style.opacity = '0';
+    setTimeout(async ()=>{ await apply(); heroEl.style.opacity = '1'; }, 460);
+  } else {
+    await apply();
+  }
+}
+
+async function renderHero(){
+  // Featured queue: one tile per row (the first tile in each), so the banner
+  // cycles through a sample across the whole library, Netflix-homepage style.
+  heroQueue = state.rows.filter(r=>r.tiles.length>0).map(r=>r.tiles[0]);
+  if(heroQueue.length === 0){
+    heroEl.classList.add('hidden');
+    stopHeroRotation();
+    return;
+  }
+  heroEl.classList.remove('hidden');
+  heroIndex = 0;
+  await showHeroTile(heroQueue[0], false);
+  startHeroRotation();
+}
+
+heroEl.addEventListener('click', ()=>{
+  if(!currentHeroTile) return;
+  stopHeroRotation();
+  playTile(currentHeroTile, heroEl);
+});
+
+async function buildRowEl(row){
+  const block = document.createElement('div');
+  block.className = 'row-block';
+
+  const header = document.createElement('div');
+  header.className = 'row-header';
+  const titleEl = document.createElement('div');
+  titleEl.className = 'row-title';
+  titleEl.textContent = row.title;
+  header.appendChild(titleEl);
+
+  const controls = document.createElement('div');
+  controls.className = 'row-edit-controls edit-only';
+  controls.innerHTML = `
+    <button class="mini-btn" data-act="rowUp" aria-label="Move row up">▲</button>
+    <button class="mini-btn" data-act="rowDown" aria-label="Move row down">▼</button>
+    <button class="mini-btn" data-act="rowEdit" aria-label="Rename row">✏️</button>
+  `;
+  controls.querySelector('[data-act="rowUp"]').onclick = ()=> moveRow(row.id,-1);
+  controls.querySelector('[data-act="rowDown"]').onclick = ()=> moveRow(row.id,1);
+  controls.querySelector('[data-act="rowEdit"]').onclick = ()=> openRowModal(row);
+  header.appendChild(controls);
+  block.appendChild(header);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'row-track-wrap';
+  const track = document.createElement('div');
+  track.className = 'row-track';
+
+  for(const tile of row.tiles){
+    track.appendChild(await buildCardEl(row, tile));
+  }
+
+  const addCard = document.createElement('div');
+  addCard.className = 'card add-tile edit-only';
+  addCard.innerHTML = `<div style="font-size:24px;">+</div><div>Add Title</div>`;
+  addCard.onclick = ()=> openTileModal(row, null);
+  track.appendChild(addCard);
+
+  wrap.appendChild(track);
+
+  const leftArrow = document.createElement('button');
+  leftArrow.className = 'row-arrow left';
+  leftArrow.innerHTML = '‹';
+  leftArrow.setAttribute('aria-label','Scroll left');
+  leftArrow.onclick = ()=> track.scrollBy({left:-320,behavior:'smooth'});
+  const rightArrow = document.createElement('button');
+  rightArrow.className = 'row-arrow right';
+  rightArrow.innerHTML = '›';
+  rightArrow.setAttribute('aria-label','Scroll right');
+  rightArrow.onclick = ()=> track.scrollBy({left:320,behavior:'smooth'});
+  wrap.appendChild(leftArrow);
+  wrap.appendChild(rightArrow);
+
+  block.appendChild(wrap);
+  return block;
+}
+
+async function buildCardEl(row, tile){
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const url = await getThumbUrl(tile);
+  if(url){
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = tile.title;
+    card.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'placeholder';
+    ph.innerHTML = `<div class="ic">🎬</div>`;
+    card.appendChild(ph);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'title-overlay';
+  overlay.textContent = tile.title;
+  card.appendChild(overlay);
+
+  if(tile.videoType === 'none'){
+    const badge = document.createElement('div');
+    badge.className = 'poster-only-badge edit-only';
+    badge.textContent = 'POSTER ONLY';
+    card.appendChild(badge);
+  }
+
+  const editRow = document.createElement('div');
+  editRow.className = 'card-edit-row edit-only';
+  editRow.innerHTML = `
+    <button data-act="edit" aria-label="Edit title">✏️</button>
+    <button data-act="del" aria-label="Delete title">✕</button>
+  `;
+  editRow.querySelector('[data-act="edit"]').onclick = (e)=>{ e.stopPropagation(); openTileModal(row, tile); };
+  editRow.querySelector('[data-act="del"]').onclick = (e)=>{ e.stopPropagation(); deleteTile(row, tile); };
+  card.appendChild(editRow);
+
+  const moveRowEl = document.createElement('div');
+  moveRowEl.className = 'card-move-row edit-only';
+  moveRowEl.innerHTML = `
+    <button data-act="left" aria-label="Move left">◀</button>
+    <button data-act="right" aria-label="Move right">▶</button>
+  `;
+  moveRowEl.querySelector('[data-act="left"]').onclick = (e)=>{ e.stopPropagation(); moveTile(row, tile.id,-1); };
+  moveRowEl.querySelector('[data-act="right"]').onclick = (e)=>{ e.stopPropagation(); moveTile(row, tile.id,1); };
+  card.appendChild(moveRowEl);
+
+  card.addEventListener('click', ()=>{
+    if(editMode) return;
+    playTile(tile, card);
+  });
+
+  return card;
+}
+
+/* ===================== Row CRUD ===================== */
+function moveRow(rowId, dir){
+  const i = state.rows.findIndex(r=>r.id===rowId);
+  const j = i+dir;
+  if(j<0 || j>=state.rows.length) return;
+  [state.rows[i], state.rows[j]] = [state.rows[j], state.rows[i]];
+  saveState(); render();
+}
+
+let editingRow = null;
+function openRowModal(row){
+  editingRow = row;
+  rowModalHeading.textContent = row ? 'Edit Row' : 'Add Row';
+  rowTitleInput.value = row ? row.title : '';
+  rowTitleInput.classList.remove('invalid');
+  deleteRowBtn.classList.toggle('hidden', !row);
+  rowModal.classList.remove('hidden');
+}
+addRowBtn.addEventListener('click', ()=> openRowModal(null));
+cancelRowBtn.addEventListener('click', ()=> rowModal.classList.add('hidden'));
+saveRowBtn.addEventListener('click', ()=>{
+  const val = rowTitleInput.value.trim();
+  if(!val){ rowTitleInput.classList.add('invalid'); return; }
+  if(editingRow){
+    editingRow.title = val;
+  } else {
+    state.rows.push({ id: uid(), title: val, tiles: [] });
+  }
+  saveState();
+  rowModal.classList.add('hidden');
+  render();
+});
+deleteRowBtn.addEventListener('click', async ()=>{
+  const ok = await confirmDialog(`Delete the row "${editingRow.title}" and all its titles? This can't be undone.`);
+  if(!ok) return;
+  for(const t of editingRow.tiles){
+    await idbDelete('thumbnails', t.id);
+    await idbDelete('videos', t.id);
+  }
+  state.rows = state.rows.filter(r=>r.id !== editingRow.id);
+  saveState();
+  rowModal.classList.add('hidden');
+  render();
+});
+
+/* ===================== Tile CRUD ===================== */
+let editingTile = null;
+let editingTileRow = null;
+let pendingThumbFile = null;
+let pendingVideoFile = null;
+let pendingYoutubeThumbUrl = null;
+let thumbIsAutoYoutube = false;
+
+function resetTileForm(){
+  tileTitleInput.value = '';
+  tileDescInput.value = '';
+  thumbPreview.classList.add('hidden');
+  thumbPreview.src = '';
+  pendingThumbFile = null;
+  pendingVideoFile = null;
+  pendingYoutubeThumbUrl = null;
+  thumbIsAutoYoutube = false;
+  videoFileName.textContent = '';
+  tileUrlInput.value = '';
+  tileYoutubeInput.value = '';
+  [tileTitleInput, tileUrlInput, tileYoutubeInput].forEach(el=>el.classList.remove('invalid'));
+  [thumbErr, urlErr, youtubeErr, uploadErr].forEach(el=>el.classList.remove('show'));
+  setSrcMode('url');
+}
+
+function setSrcMode(mode){
+  srcToggleBtns.forEach(b=> b.classList.toggle('active', b.dataset.mode===mode));
+  videoUrlField.classList.toggle('hidden', mode!=='url');
+  videoYoutubeField.classList.toggle('hidden', mode!=='youtube');
+  videoUploadField.classList.toggle('hidden', mode!=='upload');
+  videoNoneField.classList.toggle('hidden', mode!=='none');
+  if(mode!=='youtube' && thumbIsAutoYoutube && !pendingThumbFile){
+    thumbPreview.classList.add('hidden');
+    thumbPreview.src = '';
+    thumbIsAutoYoutube = false;
+    pendingYoutubeThumbUrl = null;
+  }
+}
+srcToggleBtns.forEach(b=> b.addEventListener('click', ()=> setSrcMode(b.dataset.mode)));
+
+const handleYoutubeInput = debounce(async ()=>{
+  const val = tileYoutubeInput.value.trim();
+  const id = extractYouTubeId(val);
+  youtubeErr.classList.toggle('show', val !== '' && !id);
+  if(id && !pendingThumbFile){
+    const url = await resolveYouTubeThumb(id);
+    pendingYoutubeThumbUrl = url;
+    thumbIsAutoYoutube = true;
+    thumbPreview.src = url;
+    thumbPreview.classList.remove('hidden');
+    thumbErr.classList.remove('show');
+  }
+}, 400);
+tileYoutubeInput.addEventListener('input', handleYoutubeInput);
+
+async function openTileModal(row, tile){
+  editingTileRow = row;
+  editingTile = tile;
+  resetTileForm();
+  tileModalHeading.textContent = tile ? 'Edit Title' : 'Add Title';
+  deleteTileBtn.classList.toggle('hidden', !tile);
+
+  if(tile){
+    tileTitleInput.value = tile.title;
+    tileDescInput.value = tile.description || '';
+
+    if(tile.videoType === 'youtube'){
+      setSrcMode('youtube');
+      tileYoutubeInput.value = `https://www.youtube.com/watch?v=${tile.youtubeId}`;
+      if(tile.thumbMode === 'youtube-auto'){
+        pendingYoutubeThumbUrl = tile.youtubeThumbUrl;
+        thumbIsAutoYoutube = true;
+        thumbPreview.src = tile.youtubeThumbUrl;
+        thumbPreview.classList.remove('hidden');
+      }
+    } else if(tile.videoType === 'upload'){
+      setSrcMode('upload');
+      videoFileName.textContent = 'A video file is already saved for this title ✓ (choose a new one to replace it)';
+    } else if(tile.videoType === 'none'){
+      setSrcMode('none');
+    } else {
+      setSrcMode('url');
+      tileUrlInput.value = tile.videoUrl || '';
+    }
+
+    if(tile.thumbMode === 'custom'){
+      const blob = await idbGet('thumbnails', tile.id);
+      if(blob){
+        thumbPreview.src = URL.createObjectURL(blob);
+        thumbPreview.classList.remove('hidden');
+      }
+    }
+  }
+  tileModal.classList.remove('hidden');
+}
+
+thumbPickBtn.addEventListener('click', ()=> tileThumbInput.click());
+tileThumbInput.addEventListener('change', ()=>{
+  const file = tileThumbInput.files[0];
+  if(!file) return;
+  pendingThumbFile = file;
+  thumbIsAutoYoutube = false;
+  thumbPreview.src = URL.createObjectURL(file);
+  thumbPreview.classList.remove('hidden');
+  thumbErr.classList.remove('show');
+});
+videoPickBtn.addEventListener('click', ()=> tileVideoFileInput.click());
+tileVideoFileInput.addEventListener('change', ()=>{
+  const file = tileVideoFileInput.files[0];
+  if(!file) return;
+  pendingVideoFile = file;
+  const mb = (file.size/1024/1024).toFixed(1);
+  videoFileName.textContent = `Selected: ${file.name} (${mb} MB)`;
+  uploadErr.classList.remove('show');
+});
+
+cancelTileBtn.addEventListener('click', ()=> tileModal.classList.add('hidden'));
+
+saveTileBtn.addEventListener('click', async ()=>{
+  const title = tileTitleInput.value.trim();
+  const mode = document.querySelector('.src-toggle button.active').dataset.mode;
+  const url = tileUrlInput.value.trim();
+  const youtubeId = extractYouTubeId(tileYoutubeInput.value.trim());
+  let valid = true;
+
+  tileTitleInput.classList.toggle('invalid', !title);
+  if(!title) valid = false;
+
+  const hasThumb = !thumbPreview.classList.contains('hidden') && !!thumbPreview.src;
+  thumbErr.classList.toggle('show', !hasThumb);
+  if(!hasThumb) valid = false;
+
+  if(mode === 'url'){
+    tileUrlInput.classList.toggle('invalid', !url);
+    urlErr.classList.toggle('show', !url);
+    if(!url) valid = false;
+  } else if(mode === 'youtube'){
+    tileYoutubeInput.classList.toggle('invalid', !youtubeId);
+    youtubeErr.classList.toggle('show', !youtubeId);
+    if(!youtubeId) valid = false;
+  } else if(mode === 'upload'){
+    const hasVideo = pendingVideoFile || (editingTile && editingTile.videoType==='upload');
+    uploadErr.classList.toggle('show', !hasVideo);
+    if(!hasVideo) valid = false;
+  }
+
+  if(!valid) return;
+
+  const tile = editingTile || { id: uid() };
+  tile.title = title;
+  tile.description = tileDescInput.value.trim();
+  const wasUpload = editingTile && editingTile.videoType === 'upload';
+
+  if(mode === 'youtube'){
+    tile.videoType = 'youtube';
+    tile.youtubeId = youtubeId;
+    tile.videoUrl = '';
+    if(wasUpload) await idbDelete('videos', tile.id);
+    if(pendingThumbFile){
+      tile.thumbMode = 'custom';
+      await idbPut('thumbnails', tile.id, pendingThumbFile);
+    } else {
+      tile.thumbMode = 'youtube-auto';
+      tile.youtubeThumbUrl = pendingYoutubeThumbUrl || await resolveYouTubeThumb(youtubeId);
+    }
+  } else if(mode === 'url'){
+    tile.videoType = 'url';
+    tile.videoUrl = url;
+    tile.youtubeId = '';
+    if(wasUpload) await idbDelete('videos', tile.id);
+    tile.thumbMode = 'custom';
+    if(pendingThumbFile) await idbPut('thumbnails', tile.id, pendingThumbFile);
+  } else if(mode === 'upload'){
+    tile.videoType = 'upload';
+    tile.videoUrl = '';
+    tile.youtubeId = '';
+    tile.thumbMode = 'custom';
+    if(pendingVideoFile) await idbPut('videos', tile.id, pendingVideoFile);
+    if(pendingThumbFile) await idbPut('thumbnails', tile.id, pendingThumbFile);
+  } else {
+    tile.videoType = 'none';
+    tile.videoUrl = '';
+    tile.youtubeId = '';
+    tile.thumbMode = 'custom';
+    if(wasUpload) await idbDelete('videos', tile.id);
+    if(pendingThumbFile) await idbPut('thumbnails', tile.id, pendingThumbFile);
+  }
+
+  if(!editingTile){
+    editingTileRow.tiles.push(tile);
+  }
+  saveState();
+  tileModal.classList.add('hidden');
+  render();
+  toast('Saved');
+});
+
+deleteTileBtn.addEventListener('click', async ()=>{
+  const ok = await confirmDialog(`Delete "${editingTile.title}"? This can't be undone.`);
+  if(!ok) return;
+  await deleteTile(editingTileRow, editingTile);
+  tileModal.classList.add('hidden');
+});
+
+async function deleteTile(row, tile){
+  row.tiles = row.tiles.filter(t=>t.id!==tile.id);
+  saveState();
+  await idbDelete('thumbnails', tile.id);
+  await idbDelete('videos', tile.id);
+  render();
+  toast('Deleted');
+}
+
+function moveTile(row, tileId, dir){
+  const i = row.tiles.findIndex(t=>t.id===tileId);
+  const j = i+dir;
+  if(j<0 || j>=row.tiles.length) return;
+  [row.tiles[i], row.tiles[j]] = [row.tiles[j], row.tiles[i]];
+  saveState(); render();
+}
+
+/* ===================== Video playback (Netflix-style expand) ===================== */
+async function playTile(tile, originEl){
+  attemptFullscreen(videoModal);
+
+  const rect = originEl.getBoundingClientRect();
+  const thumbUrl = await getThumbUrl(tile);
+
+  expandThumb.style.transition = 'none';
+  expandThumb.style.filter = 'brightness(1)';
+  expandThumb.style.opacity = '1';
+  expandThumb.src = thumbUrl || '';
+  expandThumb.style.left = rect.left+'px';
+  expandThumb.style.top = rect.top+'px';
+  expandThumb.style.width = rect.width+'px';
+  expandThumb.style.height = rect.height+'px';
+  expandThumb.style.borderRadius = '6px';
+
+  videoPlayer.style.transition = 'none';
+  youtubePlayerContainer.style.transition = 'none';
+  videoPlayer.style.opacity = '0'; videoPlayer.style.pointerEvents = 'none'; videoPlayer.classList.remove('hidden');
+  youtubePlayerContainer.style.opacity = '0'; youtubePlayerContainer.style.pointerEvents = 'none'; youtubePlayerContainer.classList.add('hidden');
+  manualPlayBtn.classList.add('hidden');
+  videoModal.classList.remove('hidden');
+
+  requestAnimationFrame(()=>{
+    expandThumb.style.transition = 'left .42s cubic-bezier(.4,0,.2,1), top .42s cubic-bezier(.4,0,.2,1), width .42s cubic-bezier(.4,0,.2,1), height .42s cubic-bezier(.4,0,.2,1), border-radius .42s';
+    expandThumb.style.left = '0px';
+    expandThumb.style.top = '0px';
+    expandThumb.style.width = '100vw';
+    expandThumb.style.height = '100vh';
+    expandThumb.style.borderRadius = '0px';
+  });
+
+  notAvailableCard.classList.add('hidden');
+
+  if(tile.videoType === 'none'){
+    await new Promise(res=> expandThumb.addEventListener('transitionend', res, { once:true }));
+    expandThumb.style.transition = 'filter .4s';
+    expandThumb.style.filter = 'brightness(.32)';
+    notAvailableTitle.textContent = tile.title;
+    notAvailableDesc.textContent = tile.description || '';
+    notAvailableDesc.style.display = tile.description ? 'block' : 'none';
+    notAvailableCard.classList.remove('hidden');
+    return;
+  }
+
+  const usingYoutube = tile.videoType === 'youtube';
+  let readyPromise;
+  if(usingYoutube){
+    youtubePlayerContainer.classList.remove('hidden');
+    readyPromise = startYouTube(tile.youtubeId);
+  } else {
+    let src;
+    if(tile.videoType === 'url'){
+      src = tile.videoUrl;
+    } else {
+      const blob = await idbGet('videos', tile.id);
+      if(!blob){ toast('Video file not found on this device'); closeVideo(); return; }
+      src = URL.createObjectURL(blob);
+    }
+    videoPlayer.src = src;
+    readyPromise = videoPlayer.play().then(()=>true).catch(()=>false);
+  }
+
+  const expandDone = new Promise(res=> expandThumb.addEventListener('transitionend', res, { once:true }));
+  const results = await Promise.all([expandDone, readyPromise]);
+  const playOk = results[1];
+
+  expandThumb.style.transition = 'filter .4s';
+  expandThumb.style.filter = 'brightness(.32)';
+  videoPlayer.style.transition = 'opacity .35s';
+  youtubePlayerContainer.style.transition = 'opacity .35s';
+
+  if(playOk){
+    if(usingYoutube){
+      youtubePlayerContainer.style.opacity = '1';
+      youtubePlayerContainer.style.pointerEvents = 'auto';
+    } else {
+      videoPlayer.style.opacity = '1';
+      videoPlayer.style.pointerEvents = 'auto';
+    }
+  } else {
+    manualPlayBtn.classList.remove('hidden');
+    manualPlayBtn.onclick = ()=>{
+      manualPlayBtn.classList.add('hidden');
+      videoPlayer.play();
+      videoPlayer.style.opacity = '1';
+      videoPlayer.style.pointerEvents = 'auto';
+    };
+  }
+}
+
+function closeVideo(){
+  expandThumb.style.transition = 'opacity .3s';
+  videoPlayer.style.transition = 'opacity .3s';
+  youtubePlayerContainer.style.transition = 'opacity .3s';
+  expandThumb.style.opacity = '0';
+  videoPlayer.style.opacity = '0';
+  youtubePlayerContainer.style.opacity = '0';
+  manualPlayBtn.classList.add('hidden');
+  notAvailableCard.classList.add('hidden');
+  setTimeout(()=>{
+    videoModal.classList.add('hidden');
+    videoPlayer.pause();
+    videoPlayer.removeAttribute('src');
+    videoPlayer.load();
+    if(ytPlayer){ try{ ytPlayer.destroy(); }catch(e){} ytPlayer = null; }
+    youtubePlayerContainer.innerHTML = '';
+    youtubePlayerContainer.classList.add('hidden');
+    if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    startHeroRotation();
+  }, 320);
+}
+closeVideoBtn.addEventListener('click', closeVideo);
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){
+    if(!videoModal.classList.contains('hidden')) closeVideo();
+    else if(!tileModal.classList.contains('hidden')) tileModal.classList.add('hidden');
+    else if(!rowModal.classList.contains('hidden')) rowModal.classList.add('hidden');
+    else if(!confirmModal.classList.contains('hidden')) confirmCancelBtn.click();
+  }
+});
+
+/* ===================== Init ===================== */
+(async function init(){
+  try{
+    await openDB();
+    const savedTitle = localStorage.getItem(TITLE_KEY);
+    if(savedTitle) logoText.textContent = savedTitle;
+    const savedAccent = localStorage.getItem(ACCENT_KEY);
+    if(savedAccent) applyAccent(savedAccent);
+
+    if(profilesEnabled) openProfileScreen(false);
+
+    await render();
+    await updateCurrentProfileBtn();
+    resetIdleTimer();
+  }catch(e){
+    console.error('StreamFlix init error:', e);
+    toast('Something went wrong while loading — check the browser console for details.');
+  }
+})();
+</script>
+</body>
+</html>
